@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>My Current Location</title>
+    <style>
+      /* 🌈 Base styling */
+      body {
+        font-family: "Poppins", Arial, sans-serif;
+        background: linear-gradient(135deg, #89f7fe, #66a6ff);
+        color: #333;
+        margin: 0;
+        height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .container {
+        background: #fff;
+        width: 90%;
+        max-width: 400px;
+        padding: 30px 25px;
+        border-radius: 16px;
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        text-align: center;
+        transition: 0.3s;
+      }
+
+      .container:hover {
+        transform: translateY(-3px);
+      }
+
+      h1 {
+        margin-bottom: 20px;
+        color: #333;
+        font-size: 24px;
+      }
+
+      button {
+        background: linear-gradient(135deg, #007bff, #00d4ff);
+        border: none;
+        color: white;
+        padding: 12px 25px;
+        border-radius: 30px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+      }
+
+      button:hover {
+        background: linear-gradient(135deg, #0056b3, #00aaff);
+        box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+      }
+
+      #output {
+        margin-top: 25px;
+        font-size: 16px;
+        background-color: #f8f9fa;
+        padding: 20px;
+        border-radius: 10px;
+        text-align: left;
+        line-height: 1.6;
+        box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.05);
+        word-wrap: break-word;
+      }
+
+      .loader {
+        border: 4px solid #f3f3f3;
+        border-top: 4px solid #007bff;
+        border-radius: 50%;
+        width: 30px;
+        height: 30px;
+        animation: spin 1s linear infinite;
+        margin: 20px auto;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="container">
+      <h1>📍 My Current Location</h1>
+      <button onclick="getLocation()">Get My Location</button>
+
+      <div id="output">Click the button to find your location.</div>
+    </div>
+
+    <script>
+      document.addEventListener("deviceready", onDeviceReady, false);
+
+      function onDeviceReady() {
+        console.log("Cordova is ready!");
+      }
+
+      function getLocation() {
+        const output = document.getElementById("output");
+        output.innerHTML = '<div class="loader"></div><p>Getting location...</p>';
+
+        if (!navigator.geolocation) {
+          output.innerHTML = "❌ Geolocation not supported on this device.";
+          return;
+        }
+
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            const lat = position.coords.latitude;
+            const lon = position.coords.longitude;
+
+            output.innerHTML = `
+              <div class="loader"></div>
+              <p>Fetching address...</p>
+            `;
+
+            // Fetch readable address
+            fetch(
+              `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`
+            )
+              .then((res) => res.json())
+              .then((data) => {
+                const address = data.display_name;
+                output.innerHTML = `
+                  <b>Latitude:</b> ${lat.toFixed(5)}<br>
+                  <b>Longitude:</b> ${lon.toFixed(5)}<br><br>
+                  <b>📌 Address:</b><br>${address}
+                `;
+              })
+              .catch((err) => {
+                output.innerHTML = `⚠️ Unable to fetch address.<br>${err}`;
+              });
+          },
+          (error) => {
+            output.innerHTML = `❌ Error: ${error.message}`;
+          },
+          { enableHighAccuracy: true }
+        );
+      }
+    </script>
+  </body>
+</html>
